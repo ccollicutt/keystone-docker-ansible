@@ -36,7 +36,7 @@
         delay: 5
         timeout: 30
 
-    - name: ensure keystone database exists
+    - name: ensure the keystone database exists
       mysql_db:
         name: "{{ keystone_db_name }}"
         state: present
@@ -67,7 +67,7 @@
 
     - name: install /etc/keystone/keystone.conf from template
       template:
-        src: "templates/keystone.conf.j2"
+        src: "keystone.conf.j2"
         dest: "/etc/keystone/keystone.conf"
         mode: "0644"
         owner: "root"
@@ -107,7 +107,6 @@
              --region {{ openstack_region }} \
              identity {{ item.endpoint_type }} \
              http://{{ ansible_default_ipv4.address }}:{{ item.port }}/v2.0
-
       with_items:
         - { endpoint_type: "public", port: "5000" }
         - { endpoint_type: "internal", port: "5000" }
@@ -136,6 +135,7 @@
 
     #
     # A few tests
+    #
 
     - name: run openstack user list
       shell: openstack user list | grep {{ openstack_admin_user }}
