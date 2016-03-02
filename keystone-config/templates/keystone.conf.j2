@@ -1,0 +1,13 @@
+[DEFAULT]
+admin_token={{ keystone_admin_token }}
+log_dir=/var/log/keystone
+verbose = True
+
+[catalog]
+driver=keystone.catalog.backends.sql.Catalog
+
+[token]
+provider = uuid
+
+[database]
+connection=mysql+pymysql://{{ keystone_db_user }}:{{ keystone_db_password }}@{{ mysql_server }}/{{ keystone_db_name }}

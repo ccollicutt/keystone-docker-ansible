@@ -1,0 +1,4 @@
+[client]
+user=root
+host={{ lookup('env','MYSQL_PORT_3306_TCP_ADDR') }}
+password="{{ lookup('env', 'MYSQL_ENV_MYSQL_ROOT_PASSWORD') }}"

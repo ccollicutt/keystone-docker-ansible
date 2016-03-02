@@ -1,0 +1,18 @@
+---
+
+keystone_admin_token: "ADMIN_TOKEN"
+keystone_db_name: "keystone"
+keystone_db_user: "keystone"
+keystone_db_password: "keystone_passw0rd"
+
+# Should come from docker link, I guess
+mysql_server: "{{ lookup('env','MYSQL_PORT_3306_TCP_ADDR') }}:{{ lookup('env', 'MYSQL_PORT_3306_TCP_PORT') }}"
+
+openstack_admin_user: "admin"
+openstack_admin_user_password: "admin_passw0rd"
+openstack_admin_user_project: "admin"
+openstack_admin_user_role: "admin"
+openstack_region: "Edmonton"
+
+# For shade /root/.config/openstack config config config
+cloud_name: "localcloud"

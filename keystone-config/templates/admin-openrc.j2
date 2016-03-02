@@ -1,0 +1,16 @@
+#!/bin/bash
+
+unset OS_USERNAME
+unset OS_TOKEN
+unset OS_TENANT_NAME
+unset OS_AUTH_URL
+unset OS_PASSWORD
+unset OS_IDENTITY_API_VERSION
+
+alias os='openstack'
+
+export OS_USERNAME={{ openstack_admin_user }}
+export OS_PASSWORD={{ openstack_admin_user_password }}
+export OS_TENANT_NAME={{ openstack_admin_user_project }}
+export OS_AUTH_URL=http://127.0.0.1:35357/v3
+export OS_IDENTITY_API_VERSION=3

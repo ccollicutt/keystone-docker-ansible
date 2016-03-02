@@ -1,0 +1,23 @@
+---
+
+- hosts: localhost
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - name: install cloud archive for openstack 
+    apt_repository:
+      repo: 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu trusty-updates/{{ openstack_version }} main'
+  # we need this first it seems
+  - name: install ubuntu-cloud-keyring
+    apt:
+       name: ubuntu-cloud-keyring
+       state: present
+       update_cache: true
+  # now we can do the rest
+  # FIXME: may not need mysql-client
+  - name: install required packages
+    apt:
+      name: "{{ item }}"
+      state: present
+      update_cache: true
+    with_items: "{{ packages }}"

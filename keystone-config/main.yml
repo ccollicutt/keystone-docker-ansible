@@ -1,0 +1,151 @@
+---
+
+- hosts: localhost
+  vars:
+  vars_files:
+    - vars/main.yml
+  environment:
+    - OS_URL: "http://127.0.0.1:35357/v3"
+    - OS_TOKEN: "{{ keystone_admin_token }}"
+    - OS_IDENTITY_API_VERSION: 3
+  tasks:
+
+    #
+    # keystone admin-openrc
+    #
+
+    - name: install rc files in /root
+      template:
+        src: "{{ item }}.j2"
+        dest: "/root/{{ item }}"
+        mode: "0600"
+        owner: "root"
+        group: "root"
+      with_items:
+        - admin-openrc
+        - admin-tokenrc
+    
+    # 
+    # MYSQL
+    #
+
+    - name: wait for mysql to become available 
+      wait_for:
+        port: 3306
+        host: "{{ lookup('env', 'MYSQL_PORT_3306_TCP_ADDR') }}"
+        delay: 5
+        timeout: 30
+
+    - name: ensure keystone database exists
+      mysql_db:
+        name: "{{ keystone_db_name }}"
+        state: present
+        login_host: "{{ lookup('env', 'MYSQL_PORT_3306_TCP_ADDR') }}"
+        login_user: "root"
+        login_password: "{{ lookup('env', 'MYSQL_ENV_MYSQL_ROOT_PASSWORD') }}"
+      register: new_keystone_db
+
+    - name: ensure the keystone mysql user exists
+      mysql_user:
+        name: "{{ keystone_db_user }}"
+        password: "{{ keystone_db_password }}"
+        priv: "{{ keystone_db_name}}.*:ALL"
+        host: "%"
+        login_host: "{{ lookup('env', 'MYSQL_PORT_3306_TCP_ADDR') }}"
+        login_user: "root"
+        login_password: "{{ lookup('env', 'MYSQL_ENV_MYSQL_ROOT_PASSWORD') }}"
+    
+    - name: install a .my.cnf for root
+      template:
+        src: "my.cnf.j2"
+        dest: "/root/.my.cnf"
+        mode: "0600"
+
+    #
+    # Keystone
+    #
+
+    - name: install /etc/keystone/keystone.conf from template
+      template:
+        src: "templates/keystone.conf.j2"
+        dest: "/etc/keystone/keystone.conf"
+        mode: "0644"
+        owner: "root"
+        group: "root"
+    
+    # There used to be a module for this...
+    - name: run keystone-manage db_sync when there is a new database 
+      shell: keystone-manage db_sync
+      when: new_keystone_db.changed
+
+    # Fire and forget...
+    - name: start keystone with keystone-all 
+      command: keystone-all
+      async: 1000
+      poll: 0
+
+    - name: wait for keystone to be available after the restart
+      wait_for:
+        port: 5000
+        delay: 5
+        timeout: 60
+
+    #
+    # Unfortunately I could not get the os_* modules working with
+    # an OS_TOKEN service token. So we get this shelling out to
+    # the openstack client. Darn.
+    #
+
+    - name: create keystone identity service
+      shell: openstack service create \
+             --name keystone \
+             --description "OpenStack Identity" \
+             identity
+
+    - name: create identity endpoints
+      shell: openstack endpoint create \
+             --region {{ openstack_region }} \
+             identity {{ item.endpoint_type }} \
+             http://{{ ansible_default_ipv4.address }}:{{ item.port }}/v2.0
+
+      with_items:
+        - { endpoint_type: "public", port: "5000" }
+        - { endpoint_type: "internal", port: "5000" }
+        - { endpoint_type: "admin", port: "35357" }
+
+    - name: create admin project
+      shell: openstack project create \
+             --domain default \
+             --description "Admin Project" \
+             {{ openstack_admin_user_project }}
+
+    - name: create admin user
+      shell: openstack user create \
+             --domain default \
+             --password {{ openstack_admin_user_password }} \
+             {{ openstack_admin_user }}
+
+    - name: create admin role
+      shell: openstack role create {{ openstack_admin_user_role }}
+   
+    - name: add admin user to admin role and project
+      shell: openstack role add \
+             --project {{ openstack_admin_user_project }} \
+             --user {{ openstack_admin_user }} \
+             {{ openstack_admin_user_role }}
+
+    #
+    # A few tests
+
+    - name: run openstack user list
+      shell: openstack user list | grep {{ openstack_admin_user }}
+
+    - name: run openstack service list
+      shell: openstack service list | grep identity
+   
+    - name: run openstack endpoint list
+      shell: openstack endpoint list | grep {{ item }}
+      with_items:
+        - public
+        - admin
+        - internal

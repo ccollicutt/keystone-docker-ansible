@@ -1,0 +1,21 @@
+#!/bin/bash
+
+alias os='openstack'
+
+unset OS_USERNAME
+unset OS_TOKEN
+unset OS_TENANT_NAME
+unset OS_AUTH_URL
+unset OS_PASSWORD
+unset OS_SERVICE_TOKEN
+unset OS_SERVICE_ENDPOINT
+unset OS_URL
+unset OS_IDENTITY_API_VERSION
+
+export OS_TOKEN={{ keystone_admin_token }}
+export OS_SERVICE_TOKEN=$OS_TOKEN
+
+export OS_AUTH_URL=http://127.0.0.1:35357/v3
+export OS_URL=$OS_AUTH_URL
+export OS_SERVICE_ENDPOINT=$OS_AUTH_URL
+export OS_IDENTITY_API_VERSION=3

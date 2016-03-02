@@ -1,0 +1,8 @@
+---
+
+openstack_version: "liberty"
+packages:
+  - mysql-client 
+  - keystone
+  - python-keystoneclient
+  - python-mysqldb
