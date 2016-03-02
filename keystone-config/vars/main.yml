@@ -13,6 +13,3 @@ openstack_admin_user_password: "admin_passw0rd"
 openstack_admin_user_project: "admin"
 openstack_admin_user_role: "admin"
 openstack_region: "Edmonton"
-
-# For shade /root/.config/openstack config config config
-cloud_name: "localcloud"
