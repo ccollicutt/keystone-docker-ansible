@@ -29,9 +29,6 @@ run_keystone_container:
 	docker run -d \
 	--name $(CNTR) \
 	--hostname $(CNTR) \
-	-e OS_TENANT_NAME=admin \
-	-e OS_USERNAME=admin \
-	-e OS_PASSWORD=ADMIN_PASS \
 	--link $(MYSQL_CNTR):$(MYSQL_CNTR) \
 	$(CNTR)
 
